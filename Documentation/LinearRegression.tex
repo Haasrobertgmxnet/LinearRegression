@@ -1,0 +1,304 @@
+\documentclass[a4paper,11pt]{article}
+
+% Language, encoding, and layout
+\usepackage{style}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{longtable}
+%\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{comment}
+\onehalfspacing
+\usepackage{parskip} % no indent, space between paragraphs
+\usepackage{mdframed}
+\usepackage{caption}
+\usepackage[section]{placeins}
+\usepackage{flafter} % optional, verhindert "vor der Definition"
+
+
+% Mathematics
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bbm}
+\usepackage{mathrsfs}  
+
+% --- Theoremstyles definieren ---
+\theoremstyle{plain} % Standard (fett Überschrift, kursiv Text)
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[section]
+
+\theoremstyle{definition} % Definitionsstil (fett Überschrift, normaler Text)
+\newtheorem{definition}{Definition}[section]
+
+\theoremstyle{remark} % Bemerkungsstil
+\newtheorem{remark}{Remark}[section]
+
+\theoremstyle{remark}
+\newtheorem*{conclusion}{Conclusion}
+
+% Graphics
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+
+% Diagrams
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta}
+
+\tikzset{
+    neuron/.style={circle, draw, minimum size=10mm},
+    input neuron/.style={neuron, fill=blue!20},
+    hidden neuron/.style={neuron, fill=green!20},
+    output neuron/.style={neuron, fill=red!25},
+    bias neuron/.style={neuron, fill=yellow!40},
+    dots/.style={font=\Large}
+}
+
+% dezente Farben
+\definecolor{conclusionframe}{rgb}{0,0.4,0}   % dunkles Grün
+\definecolor{conclusionback}{rgb}{0.95,1,0.95} % sehr helles, freundliches Grün
+
+% Umgebung definieren
+\newmdenv[
+  linewidth=1pt,
+  roundcorner=6pt,
+  linecolor=conclusionframe,
+  backgroundcolor=conclusionback,
+  skipabove=10pt,
+  skipbelow=10pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+  innerleftmargin=10pt,
+  innerrightmargin=10pt
+]{conclusionbox}
+
+% Colors
+%\usepackage{xcolor}
+
+% Tables
+\usepackage{booktabs}
+
+% \usepackage{lmodern}  % Modernere Schrift
+
+% Farben definieren
+\definecolor{mainblue}{RGB}{0,70,127}
+\definecolor{lightgray}{gray}{0.85}
+
+% Hyperlinks
+\usepackage{hyperref}
+\hypersetup{
+  pdftitle={Linear Regression},
+  pdfauthor={Dr. Robert Haas},
+  pdfsubject={Linear Regression},
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+% Bibliography
+%\bibliographystyle{plain}  % numerischer Stil
+\bibliographystyle{abbrvnat}
+% \bibliographystyle{plainnat}
+% \bibliography{literatur}   % Datei literatur.bib
+
+\usepackage{hyperref} % Für klickbare Links im PDF
+
+% Header and footer
+\def\title
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyhead[L]{Heat Conduction Simulation}
+  \fancyfoot[C]{\thepage}
+}
+\fancyfoot[L]{\textcolor{gray}{\small Robert Haas – Technical Software and Mathematics}}
+\fancyfoot[R]{\textcolor{gray}{\small Page \thepage\ of \pageref{LastPage}}}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- Für \pageref{LastPage} ---
+\usepackage{lastpage}
+
+\def\Meter{\mathrm{m}}
+\def\Millimeter{\mathrm{mm}}
+\def\Newton{\mathrm{N}}
+\def\Pascal{\mathrm{Pa}}
+\def\NewtonVsSquareMillimeter{\frac{\mathrm{N}}{\mathrm{mm}^2}}
+\def\NewtonVsMeter{\frac{\mathrm{N}}{\mathrm{m}}}
+
+% Title
+% \usepackage{tikz}
+\usepackage{lipsum} % für Blindtext
+
+% Farben
+%\usepackage{xcolor}
+\usepackage{lmodern}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+% --- Farben ---
+\definecolor{mainblue}{RGB}{0,70,127}
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{footergray}{gray}{0.4}
+
+% --- Fancyhdr: Fußzeile für alle Seiten außer Titelseite ---
+\fancypagestyle{main}{
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0.4pt}
+  %\fancyhead[R]{\thepage}
+  \fancyhead[C]{Linear Regression}
+  % \fancyfoot[L]{\textcolor{footergray}{Robert Haas – Technical Software and Mathematics}}
+  \fancyfoot[L]{\textcolor{footergray}{\today}}
+  \fancyfoot[R]{\textcolor{footergray}{Page \thepage\ of \pageref{LastPage}}}
+}
+
+\def\Temp{T}
+\def\uTemp{u}
+\def\wTemp{w}
+\def\eDensity{e}
+\def\Laplace{\Delta}
+\def\volMeas{\mu}
+\def\surfMeas{S}
+\def\Green{\mathscr{G}}
+\def\scaledHeatTransferCoeff{\gamma }
+\def\unitNormal{\boldsymbol{\nu}}
+
+
+
+\begin{document}
+
+
+% --- Titelseite ---
+\begin{titlepage}
+    \centering
+
+    % Zentrierte blaue Linie oben
+    \vspace*{1cm}
+    {\color{mainblue} \rule{1.0\textwidth}{2pt}}\\[0.5cm]
+
+    % Titel
+    {\Huge\bfseries Linear Regression\par}
+    
+    \vspace*{0.5cm}
+    {\color{mainblue} \rule{1.0\textwidth}{2pt}}\\[1.5cm]
+    
+    \vspace{1cm}
+
+    % Autor
+    {\Large Robert Haas}\\[0.3em]
+    % {\normalsize Dr. Robert Haas Technical Software and Mathematics}\\[0.5cm]
+
+    % Grauer Infoblock
+    \vspace{4cm}
+    \colorbox{lightgray}{
+        \parbox{0.8\textwidth}{
+            \vspace{1em}
+            \centering
+            {\normalsize\textbf{Documentation} • \today{ }• Version 1.0}\\[0.5em]
+            {\color{red}{\normalsize\textbf{••• THIS IS STILL A DRAFT •••}}}\\[0.5em]
+            {\small PDF generated with \LaTeX}
+            \vspace{1em}
+        }
+    }
+
+    \vfill
+
+    % Projektinfo (Fußbereich)
+    {\footnotesize
+    \begin{tabular}{rl}
+    \textbf{Project page:} & \href{https://github.com/Haasrobertgmxnet/HeatConduction}{https://github.com/Haasrobertgmxnet/HeatConduction}\\
+    \textbf{Contact:} & \href{mailto:Haasrobert@gmx.net}{Haasrobert@gmx.net} \\
+    \end{tabular}
+    }
+
+    \vspace{2cm}
+    {\color{mainblue} \rule{1.0\textwidth}{2pt}}  % Zentrierte Linie unten
+\end{titlepage}
+
+\pagestyle{main}
+
+\begin{abstract}
+This documentation presents ...
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Least Squares of correlated Data}
+Given a data set $ \{ (x_i, y_i ) \in \mathbbm{R}^2,\, i\in \{1,\dots , n \} \} $ we ask for an approximate functional dependency of the form $ y_i \approx f_i = f(x_i ) $ for all $ i\in \{1,\dots , n \} $. This means, $f$ is a mathematical function assigning each element $x$ of an interval $I \subset \mathbbm{R} $ an unique $y \in \mathbbm{R} $. For the rest of this documentation we assume that $f$ is a linear function, i.e. there exist numbers $ \beta_0 $ and $ \beta_1 $ in $ \mathbbm{R} $ such that $ f (x) = \beta_0 + \beta_1 x $. To achieve an optimal $f$ with optimal numbers $ \beta_0 $ and $ \beta_1 $ usually a least-square approach is used:
+\begin{equation} \label{ols}
+\mathrm{min}_{\beta_0, \beta_1 } F(\beta_0, \beta_1 ) \text{ with } F(\beta_0, \beta_1 ) = \frac{1}{2}\sum_{i=1}^n | \beta_0 + \beta_1 x_i - y_i |^2  .
+\end{equation}
+For optimal $ \hat{\beta}_0 $ and $ \hat{\beta}_1 $ the necessary conditions read as
+\begin{equation} \label{nec_cond}
+\frac{\partial F}{\partial \beta_1 } = \sum_{i=1}^n ( \hat{\beta}_0 + \hat{\beta}_1 x_i - y_i ) x_i  = 0 \text{ and } \frac{\partial F}{\partial \beta_0 } = \sum_{i=1}^n ( \hat{\beta}_0 + \hat{\beta}_1 x_i - y_i ) = 0 .
+\end{equation}
+Now we need the following definitions:
+\begin{eqnarray}
+\bar{x} & = & \frac{1}{n} \sum_{i=1}^n x_i, \text{ the arithmetic mean of } \{x_i \}_{i=1}^n ,\\
+\bar{y} & = & \frac{1}{n} \sum_{i=1}^n y_i, \text{ the arithmetic mean of } \{y_i \}_{i=1}^n , \\
+\sigma_x & = & \sqrt{\nu_n \sum_{i=1}^n (x_i - \bar{x} )^2}, \text{ the standard deviation of } \{x_i \}_{i=1}^n , \\
+\sigma_y & = & \sqrt{\nu_n \sum_{i=1}^n (y_i - \bar{y} )^2}, \text{ the standard deviation of } \{y_i \}_{i=1}^n ,\\
+\varrho_{x,y} & = & \frac{\nu_n \sum_{i=1}^n (x_i - \bar{x} )(y_i - \bar{y} ) }{\sigma_x \sigma_y} , \text{ the correlation coefficient of  }\{x_i \}_{i=1}^n \text{ and } \{y_i \}_{i=1}^n .
+\end{eqnarray}
+Here $ \nu_n $ is either $ 1 / (n-1 ) $ if $ \{ (x_i , y_i ) \}_{i=1}^n $ is a sample, and $ \nu_n = 1 /n $, else.
+With this definitions the solutions $ \hat{\beta}_0 $ and $ \hat{\beta}_1 $ of (\ref{nec_cond}) are $ \hat{\beta}_1 = \sigma_y \varrho_{x,y} / \sigma_x $ and $ \hat{\beta}_0 = \bar{y} - \hat{\beta}_1 
+\bar{x } $.
+We need some more definitions:
+\begin{eqnarray*}
+SS_{\mathrm{tot}} & = & \sum_{i=1}^n (y_i - \bar{y} )^2, \text{ the total sum of squares },\\
+SS_{\mathrm{reg}} & = & \sum_{i=1}^n (f_i - \bar{y} )^2, \text{ the explained sum of squares },\\
+SS_{\mathrm{res}} & = & \sum_{i=1}^n (f_i - y_i  )^2, \text{ the residual sum of squares }.
+\end{eqnarray*}
+\begin{theorem}\label{split}
+The equation $ SS_{\mathrm{tot}} = SS_{\mathrm{reg}} + SS_{\mathrm{res}} $ is true.
+\end{theorem}
+\begin{proof}
+There is 
+\begin{eqnarray*}
+SS_{\mathrm{tot}} & = & \sum_{i=1}^n (y_i - \bar{y} )^2 \\
+& = & \sum_{i=1}^n ((y_i - f_i ) + (f_i -\bar{y} ) )^2 \\
+& = & SS_{\mathrm{reg}} + SS_{\mathrm{res}} -2\sum_{i=1}^n (f_i - y_i ) (f_i -\bar{y} )  \\
+\end{eqnarray*}
+It remains to show $ \sum_{i=1}^n (f_i - y_i ) (f_i -\bar{y} ) = 0 $. We have
+\begin{eqnarray*}
+\sum_{i=1}^n (f_i - y_i ) (f_i -\bar{y} ) & = & \sum_{i=1}^n \left( (f_i - y_i ) ( \hat{\beta}_0 + \hat{\beta}_1 x_i ) - (f_i - y_i )\bar{y} \right) \\
+& = & ( \hat{\beta}_0 - \bar{y} ) \sum_{i=1}^n (f_i - y_i ) + \hat{\beta}_1 \sum_{i=1}^n (f_i - y_i ) x_i .
+\end{eqnarray*}
+Finally we have 
+\begin{eqnarray*}
+\sum_{i=1}^n (f_i - y_i ) & = & \frac{\partial F}{\partial \beta_0 } = \sum_{i=1}^n ( \hat{\beta}_0 + \hat{\beta}_1 x_i - y_i ) = 0 , \\
+\sum_{i=1}^n (f_i - y_i )x_i & = & \frac{\partial F}{\partial \beta_1 } = \sum_{i=1}^n ( \hat{\beta}_0 + \hat{\beta}_1 x_i - y_i ) x_i  = 0 ,
+\end{eqnarray*}
+as from (\ref{nec_cond}). That is $ \sum_{i=1}^n (f_i - y_i ) (f_i -\bar{y} ) $ and $ SS_{\mathrm{tot}} = SS_{\mathrm{reg}} + SS_{\mathrm{res}} $.
+\end{proof}
+The coefficient of determination $R^2 $ is given by
+\begin{equation*}
+R^2 = 1 - \frac{SS_{\mathrm{res}} }{SS_{\mathrm{tot}} }  = \frac{SS_{\mathrm{reg}} }{SS_{\mathrm{tot}} } .
+\end{equation*}
+
+\begin{theorem}
+The equation $ \varrho^2_{x,y}  = R^2 $ is true.
+\end{theorem}
+
+\begin{proof}
+There is 
+\begin{eqnarray*}
+\frac{SS_{\mathrm{reg}} }{SS_{\mathrm{tot}} } & = & \frac{\sum_{i=1}^n (\hat{\beta}_0 + \hat{\beta}_1 x_i - \bar{y} )^2 }{SS_{\mathrm{tot}} } \\
+& = & \frac{\hat{\beta}^2_1 \sum_{i=1}^n ( x_i - \bar{x} )^2 }{\sum_{i=1}^n ( y_i - \bar{y} )^2 } \\
+& = & \frac{\hat{\beta}^2_1 \sigma^2_x }{\sigma^2_y } \\
+& = & \left( \frac{\sigma_y }{\sigma_x } \varrho_{x,y }\right)^2 \frac{ \sigma^2_x }{\sigma^2_y } = \varrho^2_{x,y }
+\end{eqnarray*}
+\end{proof}
+% \input{TeX/References}
+
+%\newpage
+% \printbibliography
+
+\end{document}
