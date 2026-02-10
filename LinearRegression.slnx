@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="LinearRegression/LinearRegression.vcxproj" Id="0621258c-c087-4d17-86d4-9c0681675425" />
+</Solution>
