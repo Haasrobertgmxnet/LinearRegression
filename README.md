@@ -1,229 +1,6 @@
 # LinearRegression - Modern C++20 Linear Regression Library
 
-[🇬🇧 English](#english) | [🇩🇪 Deutsch](#deutsch) | [🇪🇸 Español](#español)
-
----
-
-## English
-
-### Overview
-A modern, template-based implementation of simple linear regression using C++20 features with statistical analysis capabilities. This library provides professional-grade regression analysis with Boost integration for accurate confidence interval calculations.
-
-### Features
-- **Modern C++20**: Utilizes concepts, `std::span`, `std::transform_reduce`, and `[[nodiscard]]`
-- **Template-Based**: Generic implementation supporting various numeric types (float, double, long double)
-- **Boost Integration**: Uses Boost.Math for accurate Student's t-distribution quantiles
-- **Comprehensive Statistics**: Calculates regression coefficients, correlation, SSE, and confidence intervals
-- **Memory Efficient**: Works with `std::span` to avoid unnecessary copies
-- **Type Safe**: Extensive use of concepts and `static_assert` for compile-time safety
-- **Header-Only Compatible**: Suitable for header-only library integration
-
-### Project Structure
-
-```
-LinearRegression/
-├── LinearRegression/
-│   ├── LinearRegression.h      # Main regression implementation
-│   ├── stats.h                 # Statistical utility functions
-│   ├── span_compatible.h       # Helper utilities and concepts
-│   └── main.cpp               # Example usage (if present)
-├── Documentation/              # Additional documentation
-├── LinearRegression.slnx      # Visual Studio solution
-└── README.md                  # This file
-```
-
-### Mathematical Foundation
-
-The implementation fits a linear model of the form:
-
-```
-y = β₀ + β₁x + ε
-```
-
-**Where:**
-- **β₀** (beta0): y-intercept
-- **β₁** (beta1): slope coefficient
-- **ρ** (rho): Pearson correlation coefficient
-- **ε**: error term
-
-**Calculations:**
-1. **Sums of Squares**: Sxx = Σ(xᵢ - x̄)², Syy = Σ(yᵢ - ȳ)², Sxy = Σ(xᵢ - x̄)(yᵢ - ȳ)
-2. **Slope**: β₁ = Sxy / Sxx
-3. **Intercept**: β₀ = ȳ - β₁x̄
-4. **Correlation**: ρ = Sxy / √(Sxx × Syy)
-5. **SSE**: Sum of squared errors
-6. **Confidence Interval**: Uses Student's t-distribution with n-2 degrees of freedom
-
-### Installation
-
-#### Prerequisites
-- C++20 compatible compiler (GCC 10+, Clang 10+, MSVC 2019+)
-- Boost libraries (specifically Boost.Math)
-
-#### Dependencies
-
-```bash
-# Ubuntu/Debian
-sudo apt-get install libboost-math-dev
-
-# macOS with Homebrew
-brew install boost
-
-# Windows (vcpkg)
-vcpkg install boost-math
-```
-
-#### Clone and Build
-
-```bash
-git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
-cd LinearRegression
-
-# Using g++
-g++ -std=c++20 -I/path/to/boost -o regression_example main.cpp
-```
-
-### Basic Usage
-
-```cpp
-#include "LinearRegression.h"
-#include <vector>
-#include <iostream>
-
-int main() {
-    // Prepare data
-    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-    std::vector<double> y = {2.1, 3.9, 6.2, 7.8, 10.1};
-    
-    // Fit the model
-    auto result = LinearRegression::fit(x, y);
-    
-    // Access regression parameters
-    std::cout << "Intercept (β₀): " << result.beta0 << std::endl;
-    std::cout << "Slope (β₁): " << result.beta1 << std::endl;
-    std::cout << "Correlation (ρ): " << result.rho << std::endl;
-    
-    // Calculate coefficient of determination
-    double r_squared = LinearRegression::coeff_of_determination(result);
-    std::cout << "R² = " << r_squared << std::endl;
-    
-    // Calculate 95% confidence interval for the slope
-    auto [lower, upper] = LinearRegression::ci_slope(result, 0.05);
-    std::cout << "95% CI: [" << lower << ", " << upper << "]" << std::endl;
-    
-    return 0;
-}
-```
-
-### API Reference
-
-#### Struct: `FitResult<T>`
-
-Container for regression results.
-
-**Members:**
-- `T beta0` - y-intercept
-- `T beta1` - slope coefficient
-- `T rho` - Pearson correlation coefficient
-- `T sxx`, `syy`, `sxy` - sums of squares and cross-products
-- `T sse` - sum of squared errors
-- `std::size_t n` - number of data points
-
-#### Function: `fit`
-
-```cpp
-template <class T>
-FitResult<T> fit(std::span<const T> x, std::span<const T> y)
-```
-
-Fits a linear regression model to the data.
-
-**Requirements:**
-- x and y must have the same size
-- Minimum 3 data points required
-- x values must not all be identical
-
-#### Function: `ci_slope`
-
-```cpp
-std::pair<double, double> ci_slope(const FitResult<double>& fitResult, double alpha)
-```
-
-Calculates confidence interval for the slope coefficient.
-
-**Parameters:**
-- `fitResult` - Result from `fit()` function
-- `alpha` - Significance level (e.g., 0.05 for 95% CI)
-
-#### Function: `coeff_of_determination`
-
-```cpp
-template <typename T>
-T coeff_of_determination(const FitResult<T>& fitResult)
-```
-
-Calculates the coefficient of determination (R²).
-
-**Returns:** R² value (0 to 1) measuring goodness of fit
-
-**Interpretation:**
-- R² = 1.0: Perfect fit
-- R² > 0.9: Excellent fit
-- R² > 0.7: Good fit
-- R² < 0.4: Weak fit
-
-**Example:**
-```cpp
-auto result = LinearRegression::fit(x, y);
-double r_squared = LinearRegression::coeff_of_determination(result);
-std::cout << "Model explains " << (r_squared * 100) << "% of variance\n";
-```
-
-### Advanced Usage
-
-#### Working with Different Data Types
-
-```cpp
-// Using float
-std::vector<float> x_f = {1.0f, 2.0f, 3.0f};
-std::vector<float> y_f = {2.0f, 4.0f, 6.0f};
-auto result_f = LinearRegression::fit(x_f, y_f);
-
-// Using double (recommended)
-std::vector<double> x_d = {1.0, 2.0, 3.0};
-std::vector<double> y_d = {2.0, 4.0, 6.0};
-auto result_d = LinearRegression::fit(x_d, y_d);
-
-// Using long double (maximum precision)
-std::vector<long double> x_ld = {1.0L, 2.0L, 3.0L};
-std::vector<long double> y_ld = {2.0L, 4.0L, 6.0L};
-auto result_ld = LinearRegression::fit(x_ld, y_ld);
-```
-
-#### Using std::span Directly
-
-```cpp
-double x_data[] = {1.0, 2.0, 3.0, 4.0};
-double y_data[] = {2.0, 4.0, 6.0, 8.0};
-
-std::span<const double> x_span{x_data};
-std::span<const double> y_span{y_data};
-
-auto result = LinearRegression::fit(x_span, y_span);
-```
-
-### License
-
-This project is open source and available under the MIT License.
-
-### Author
-
-**Haasrobertgmxnet**
-- GitHub: [@Haasrobertgmxnet](https://github.com/Haasrobertgmxnet)
-
-### Contributions
-
-Issues and Pull Requests are welcome! Please open an issue for major changes.
+[🇩🇪 Deutsch](#deutsch) | [🇪🇸 Español](#español) | [🇬🇧 English](#english)
 
 ---
 
@@ -246,10 +23,10 @@ Eine moderne, template-basierte Implementierung der einfachen linearen Regressio
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── LinearRegression.h      # Haupt-Regressionsimplementierung
+│   ├── linreg.h      # Haupt-Regressionsimplementierung
 │   ├── stats.h                 # Statistische Hilfsfunktionen
 │   ├── span_compatible.h       # Helper-Utilities und Concepts
-│   └── main.cpp               # Beispielverwendung (falls vorhanden)
+│   └── LinearRegression.cpp               # Beispielverwendung (falls vorhanden)
 ├── Documentation/              # Zusätzliche Dokumentation
 ├── LinearRegression.slnx      # Visual Studio Solution
 └── README.md                  # Diese Datei
@@ -303,13 +80,13 @@ git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
 # Mit g++
-g++ -std=c++20 -I/pfad/zu/boost -o regression_example main.cpp
+g++ -std=c++20 -I/pfad/zu/boost -o regression_example LinearRegression.cpp
 ```
 
 ### Grundlegende Verwendung
 
 ```cpp
-#include "LinearRegression.h"
+#include "linreg.h"
 #include <vector>
 #include <iostream>
 
@@ -469,10 +246,10 @@ Una implementación moderna basada en templates de regresión lineal simple util
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── LinearRegression.h      # Implementación principal de regresión
+│   ├── linreg.h      # Implementación principal de regresión
 │   ├── stats.h                 # Funciones de utilidad estadística
 │   ├── span_compatible.h       # Utilidades helper y concepts
-│   └── main.cpp               # Ejemplo de uso (si está presente)
+│   └── LinearRegression.cpp               # Ejemplo de uso (si está presente)
 ├── Documentation/              # Documentación adicional
 ├── LinearRegression.slnx      # Solución de Visual Studio
 └── README.md                  # Este archivo
@@ -526,13 +303,13 @@ git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
 # Usando g++
-g++ -std=c++20 -I/ruta/a/boost -o regression_example main.cpp
+g++ -std=c++20 -I/ruta/a/boost -o regression_example LinearRegression.cpp
 ```
 
 ### Uso Básico
 
 ```cpp
-#include "LinearRegression.h"
+#include "linreg.h"
 #include <vector>
 #include <iostream>
 
@@ -670,3 +447,226 @@ Este proyecto es de código abierto y está disponible bajo la Licencia MIT.
 ### Contribuciones
 
 ¡Issues y Pull Requests son bienvenidos! Por favor, abre un issue para cambios mayores.
+
+---
+
+## English
+
+### Overview
+A modern, template-based implementation of simple linear regression using C++20 features with statistical analysis capabilities. This library provides professional-grade regression analysis with Boost integration for accurate confidence interval calculations.
+
+### Features
+- **Modern C++20**: Utilizes concepts, `std::span`, `std::transform_reduce`, and `[[nodiscard]]`
+- **Template-Based**: Generic implementation supporting various numeric types (float, double, long double)
+- **Boost Integration**: Uses Boost.Math for accurate Student's t-distribution quantiles
+- **Comprehensive Statistics**: Calculates regression coefficients, correlation, SSE, and confidence intervals
+- **Memory Efficient**: Works with `std::span` to avoid unnecessary copies
+- **Type Safe**: Extensive use of concepts and `static_assert` for compile-time safety
+- **Header-Only Compatible**: Suitable for header-only library integration
+
+### Project Structure
+
+```
+LinearRegression/
+├── LinearRegression/
+│   ├── linreg.h      # Main regression implementation
+│   ├── stats.h                 # Statistical utility functions
+│   ├── span_compatible.h       # Helper utilities and concepts
+│   └── LinearRegression.cpp               # Example usage (if present)
+├── Documentation/              # Additional documentation
+├── LinearRegression.slnx      # Visual Studio solution
+└── README.md                  # This file
+```
+
+### Mathematical Foundation
+
+The implementation fits a linear model of the form:
+
+```
+y = β₀ + β₁x + ε
+```
+
+**Where:**
+- **β₀** (beta0): y-intercept
+- **β₁** (beta1): slope coefficient
+- **ρ** (rho): Pearson correlation coefficient
+- **ε**: error term
+
+**Calculations:**
+1. **Sums of Squares**: Sxx = Σ(xᵢ - x̄)², Syy = Σ(yᵢ - ȳ)², Sxy = Σ(xᵢ - x̄)(yᵢ - ȳ)
+2. **Slope**: β₁ = Sxy / Sxx
+3. **Intercept**: β₀ = ȳ - β₁x̄
+4. **Correlation**: ρ = Sxy / √(Sxx × Syy)
+5. **SSE**: Sum of squared errors
+6. **Confidence Interval**: Uses Student's t-distribution with n-2 degrees of freedom
+
+### Installation
+
+#### Prerequisites
+- C++20 compatible compiler (GCC 10+, Clang 10+, MSVC 2019+)
+- Boost libraries (specifically Boost.Math)
+
+#### Dependencies
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install libboost-math-dev
+
+# macOS with Homebrew
+brew install boost
+
+# Windows (vcpkg)
+vcpkg install boost-math
+```
+
+#### Clone and Build
+
+```bash
+git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
+cd LinearRegression
+
+# Using g++
+g++ -std=c++20 -I/path/to/boost -o regression_example LinearRegression.cpp
+```
+
+### Basic Usage
+
+```cpp
+#include "linreg.h"
+#include <vector>
+#include <iostream>
+
+int main() {
+    // Prepare data
+    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> y = {2.1, 3.9, 6.2, 7.8, 10.1};
+    
+    // Fit the model
+    auto result = LinearRegression::fit(x, y);
+    
+    // Access regression parameters
+    std::cout << "Intercept (β₀): " << result.beta0 << std::endl;
+    std::cout << "Slope (β₁): " << result.beta1 << std::endl;
+    std::cout << "Correlation (ρ): " << result.rho << std::endl;
+    
+    // Calculate coefficient of determination
+    double r_squared = LinearRegression::coeff_of_determination(result);
+    std::cout << "R² = " << r_squared << std::endl;
+    
+    // Calculate 95% confidence interval for the slope
+    auto [lower, upper] = LinearRegression::ci_slope(result, 0.05);
+    std::cout << "95% CI: [" << lower << ", " << upper << "]" << std::endl;
+    
+    return 0;
+}
+```
+
+### API Reference
+
+#### Struct: `FitResult<T>`
+
+Container for regression results.
+
+**Members:**
+- `T beta0` - y-intercept
+- `T beta1` - slope coefficient
+- `T rho` - Pearson correlation coefficient
+- `T sxx`, `syy`, `sxy` - sums of squares and cross-products
+- `T sse` - sum of squared errors
+- `std::size_t n` - number of data points
+
+#### Function: `fit`
+
+```cpp
+template <class T>
+FitResult<T> fit(std::span<const T> x, std::span<const T> y)
+```
+
+Fits a linear regression model to the data.
+
+**Requirements:**
+- x and y must have the same size
+- Minimum 3 data points required
+- x values must not all be identical
+
+#### Function: `ci_slope`
+
+```cpp
+std::pair<double, double> ci_slope(const FitResult<double>& fitResult, double alpha)
+```
+
+Calculates confidence interval for the slope coefficient.
+
+**Parameters:**
+- `fitResult` - Result from `fit()` function
+- `alpha` - Significance level (e.g., 0.05 for 95% CI)
+
+#### Function: `coeff_of_determination`
+
+```cpp
+template <typename T>
+T coeff_of_determination(const FitResult<T>& fitResult)
+```
+
+Calculates the coefficient of determination (R²).
+
+**Returns:** R² value (0 to 1) measuring goodness of fit
+
+**Interpretation:**
+- R² = 1.0: Perfect fit
+- R² > 0.9: Excellent fit
+- R² > 0.7: Good fit
+- R² < 0.4: Weak fit
+
+**Example:**
+```cpp
+auto result = LinearRegression::fit(x, y);
+double r_squared = LinearRegression::coeff_of_determination(result);
+std::cout << "Model explains " << (r_squared * 100) << "% of variance\n";
+```
+
+### Advanced Usage
+
+#### Working with Different Data Types
+
+```cpp
+// Using float
+std::vector<float> x_f = {1.0f, 2.0f, 3.0f};
+std::vector<float> y_f = {2.0f, 4.0f, 6.0f};
+auto result_f = LinearRegression::fit(x_f, y_f);
+
+// Using double (recommended)
+std::vector<double> x_d = {1.0, 2.0, 3.0};
+std::vector<double> y_d = {2.0, 4.0, 6.0};
+auto result_d = LinearRegression::fit(x_d, y_d);
+
+// Using long double (maximum precision)
+std::vector<long double> x_ld = {1.0L, 2.0L, 3.0L};
+std::vector<long double> y_ld = {2.0L, 4.0L, 6.0L};
+auto result_ld = LinearRegression::fit(x_ld, y_ld);
+```
+
+#### Using std::span Directly
+
+```cpp
+double x_data[] = {1.0, 2.0, 3.0, 4.0};
+double y_data[] = {2.0, 4.0, 6.0, 8.0};
+
+std::span<const double> x_span{x_data};
+std::span<const double> y_span{y_data};
+
+auto result = LinearRegression::fit(x_span, y_span);
+```
+
+### License
+
+This project is open source and available under the MIT License.
+
+### Author
+
+**Haasrobertgmxnet**
+- GitHub: [@Haasrobertgmxnet](https://github.com/Haasrobertgmxnet)
+
+### Contributions
+
+Issues and Pull Requests are welcome! Please open an issue for major changes.
