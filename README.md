@@ -53,6 +53,7 @@ y = β₀ + β₁x + ε
 4. **Korrelation**: ρ = Sxy / √(Sxx × Syy)
 5. **SSE**: Summe der quadrierten Fehler
 6. **Konfidenzintervall**: Verwendet Student-t-Verteilung mit n-2 Freiheitsgraden
+7. **Bestimmtheitsmaß**: R² = ρ²
 
 ### Installation
 
@@ -276,6 +277,7 @@ y = β₀ + β₁x + ε
 4. **Correlación**: ρ = Sxy / √(Sxx × Syy)
 5. **SSE**: Suma de errores cuadrados
 6. **Intervalo de Confianza**: Usa distribución t de Student con n-2 grados de libertad
+7. **Coeficiente de determinación**: R² = ρ²
 
 ### Instalación
 
@@ -499,6 +501,7 @@ y = β₀ + β₁x + ε
 4. **Correlation**: ρ = Sxy / √(Sxx × Syy)
 5. **SSE**: Sum of squared errors
 6. **Confidence Interval**: Uses Student's t-distribution with n-2 degrees of freedom
+7. **Coefficient of determination**: R² = ρ²
 
 ### Installation
 
