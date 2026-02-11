@@ -76,7 +76,8 @@ namespace LinearRegression {
 	 * std::cout << "y = " << result.beta0 << " + " << result.beta1 << "x\n";
 	 * @endcode
 	 */
-	template <class T>
+	template <typename T>
+		requires std::is_floating_point_v<T>
 	[[nodiscard]]  // Prevents accidentally discarding the result
 	FitResult<T> fit(std::span<const T> x, std::span<const T> y)
 	{
@@ -279,6 +280,78 @@ namespace LinearRegression {
 		ci_slope(const FitResult<double>& fitResult, const double alpha)
 	{
 		return ci_slope<double>(fitResult, alpha);
+	}
+
+	/**
+ * @brief Calculates the coefficient of determination (R²)
+ * @tparam T Floating-point type (float, double, long double)
+ * @param fitResult The result from a previous fit() call
+ * @return R² value ranging from 0 to 1
+ *
+ * The coefficient of determination (R²) measures the proportion of variance
+ * in the dependent variable that is predictable from the independent variable.
+ * It is computed as the square of the Pearson correlation coefficient.
+ *
+ * Mathematical formula: R² = ρ²
+ *
+ * Interpretation:
+ * - R² = 1.0: Perfect fit - all data points lie exactly on the regression line
+ * - R² = 0.9-0.99: Excellent fit - strong linear relationship
+ * - R² = 0.7-0.89: Good fit - substantial linear relationship
+ * - R² = 0.4-0.69: Moderate fit - noticeable linear relationship
+ * - R² = 0.0-0.39: Weak fit - little to no linear relationship
+ * - R² = 0.0: No linear relationship
+ *
+ * Note: R² can also be calculated as 1 - (SSE/SST) where:
+ * - SSE = sum of squared errors (residuals)
+ * - SST = total sum of squares
+ *
+ * This implementation uses the simpler formula R² = ρ² which is
+ * mathematically equivalent for simple linear regression.
+ *
+ * Example:
+ * @code
+ * auto result = LinearRegression::fit(x, y);
+ * double r_squared = LinearRegression::coeff_of_determination(result);
+ * std::cout << "R² = " << r_squared << std::endl;
+ *
+ * if (r_squared > 0.95) {
+ *     std::cout << "Excellent fit!" << std::endl;
+ * }
+ * @endcode
+ *
+ * @note This function is marked [[nodiscard]] to prevent accidentally
+ *       ignoring the calculated R² value
+ */
+	template <typename T>
+		requires std::is_floating_point_v<T>
+	[[nodiscard]]
+	T coeff_of_determination(const FitResult<T>& fitResult)
+	{
+		// R² = ρ² (square of correlation coefficient)
+		// This gives the proportion of variance explained by the model
+		return fitResult.rho * fitResult.rho;
+	}
+
+	/**
+	 * @brief Double-precision specialization for coefficient of determination
+	 * @param fitResult Result from fit() with double precision
+	 * @return R² value as double
+	 *
+	 * This inline specialization provides backward compatibility and convenience
+	 * for the common case of double-precision regression. It simply forwards
+	 * to the template version with T=double.
+	 *
+	 * Example:
+	 * @code
+	 * FitResult<double> result = LinearRegression::fit(x, y);
+	 * double r_squared = LinearRegression::coeff_of_determination(result);
+	 * @endcode
+	 */
+	[[nodiscard]]
+	inline double coeff_of_determination(const FitResult<double>& fitResult)
+	{
+		return coeff_of_determination<double>(fitResult);
 	}
 
 } // namespace LinearRegression

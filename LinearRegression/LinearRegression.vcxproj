@@ -133,7 +133,6 @@
     <ClInclude Include="linreg.h" />
     <ClInclude Include="span_compatible.h" />
     <ClInclude Include="stats.h" />
-    <ClInclude Include="student_t.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
