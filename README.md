@@ -23,10 +23,10 @@ Eine moderne, template-basierte Implementierung der einfachen linearen Regressio
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── LinearRegression.h      # Haupt-Regressionsimplementierung
+│   ├── linreg.h      # Haupt-Regressionsimplementierung
 │   ├── stats.h                 # Statistische Hilfsfunktionen
 │   ├── span_compatible.h       # Helper-Utilities und Concepts
-│   └── main.cpp               # Beispielverwendung (falls vorhanden)
+│   └── LinearRegression.cpp               # Beispielverwendung (falls vorhanden)
 ├── Documentation/              # Zusätzliche Dokumentation
 ├── LinearRegression.slnx      # Visual Studio Solution
 └── README.md                  # Diese Datei
@@ -80,13 +80,13 @@ git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
 # Mit g++
-g++ -std=c++20 -I/pfad/zu/boost -o regression_example main.cpp
+g++ -std=c++20 -I/pfad/zu/boost -o regression_example LinearRegression.cpp
 ```
 
 ### Grundlegende Verwendung
 
 ```cpp
-#include "LinearRegression.h"
+#include "linreg.h"
 #include <vector>
 #include <iostream>
 
@@ -219,10 +219,10 @@ Una implementación moderna basada en templates de regresión lineal simple util
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── LinearRegression.h      # Implementación principal de regresión
+│   ├── linreg.h      # Implementación principal de regresión
 │   ├── stats.h                 # Funciones de utilidad estadística
 │   ├── span_compatible.h       # Utilidades helper y concepts
-│   └── main.cpp               # Ejemplo de uso (si está presente)
+│   └── LinearRegression.cpp               # Ejemplo de uso (si está presente)
 ├── Documentation/              # Documentación adicional
 ├── LinearRegression.slnx      # Solución de Visual Studio
 └── README.md                  # Este archivo
@@ -276,13 +276,13 @@ git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
 # Usando g++
-g++ -std=c++20 -I/ruta/a/boost -o regression_example main.cpp
+g++ -std=c++20 -I/ruta/a/boost -o regression_example LinearRegression.cpp
 ```
 
 ### Uso Básico
 
 ```cpp
-#include "LinearRegression.h"
+#include "linreg.h"
 #include <vector>
 #include <iostream>
 
@@ -415,10 +415,10 @@ A modern, template-based implementation of simple linear regression using C++20 
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── LinearRegression.h      # Main regression implementation
+│   ├── linreg.h      # Main regression implementation
 │   ├── stats.h                 # Statistical utility functions
 │   ├── span_compatible.h       # Helper utilities and concepts
-│   └── main.cpp               # Example usage (if present)
+│   └── LinearRegression.cpp               # Example usage (if present)
 ├── Documentation/              # Additional documentation
 ├── LinearRegression.slnx      # Visual Studio solution
 └── README.md                  # This file
@@ -472,13 +472,13 @@ git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
 # Using g++
-g++ -std=c++20 -I/path/to/boost -o regression_example main.cpp
+g++ -std=c++20 -I/path/to/boost -o regression_example LinearRegression.cpp
 ```
 
 ### Basic Usage
 
 ```cpp
-#include "LinearRegression.h"
+#include "linreg.h"
 #include <vector>
 #include <iostream>
 
