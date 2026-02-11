@@ -1,5 +1,5 @@
 ﻿/**
- * @file linreg.h
+ * @file LinearRegression.h
  * @brief Modern C++20 implementation of simple linear regression
  * @author Haasrobertgmxnet
  * @date 2025
@@ -186,8 +186,10 @@ namespace LinearRegression {
 	 * because it accounts for estimation uncertainty when sample size is small.
 	 * As degrees of freedom increase, it approaches the normal distribution.
 	 */
-	double t_quantile_boost(double p, double m) {
-		boost::math::students_t dist(m);
+	template <typename T>
+		requires std::is_floating_point_v<T>
+	T t_quantile(T p, T m) {
+		boost::math::students_t_distribution<T> dist(m);
 		return boost::math::quantile(dist, p);
 	}
 
@@ -197,6 +199,14 @@ namespace LinearRegression {
 	 * @param alpha Significance level (e.g., 0.05 for 95% confidence)
 	 * @return Pair of (lower bound, upper bound) for the slope
 	 *
+	 * Template version that preserves the precision of the input type.
+	 * This is the preferred implementation as it:
+	 * - Matches the type used in fit()
+	 * - Preserves numerical precision
+	 * - Provides consistent API design
+
+
+
 	 * Computes the confidence interval for β₁ using the formula:
 	 * CI = β₁ ± t(1-α/2, n-2) × SE(β₁)
 	 *
@@ -220,12 +230,14 @@ namespace LinearRegression {
 	 *       - 0.05 for 95% confidence (most common)
 	 *       - 0.10 for 90% confidence
 	 */
-	std::pair<double, double>
-		ci_slope(const FitResult<double>& fitResult, const double alpha)
+	template <typename T>
+		requires std::is_floating_point_v<T>
+	[[nodiscard]]
+	std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
 	{
 		// Degrees of freedom: n - 2
 		// We lose 2 degrees because we estimated β₀ and β₁
-		const auto dof = fitResult.n - 2;
+		const auto dof = static_cast<T>(fitResult.n - 2);
 
 		// Scaling factor for standard error calculation
 		const auto scal = fitResult.syy / fitResult.sxx;
@@ -234,22 +246,39 @@ namespace LinearRegression {
 		// This measures the uncertainty in our slope estimate
 		// Formula: SE(β₁) = √[scal × (1 - β₁²/scal) / dof]
 		const auto sb = std::sqrt(scal *
-			(1.0 - fitResult.beta1 * fitResult.beta1 / scal) / dof
+			(T{ 1 } - fitResult.beta1 * fitResult.beta1 / scal) / dof
 		);
 
 		// Get the critical t-value for the desired confidence level
 		// For 95% CI with α=0.05, we need t at probability 0.975
 		// (two-tailed test, so we use 1 - α/2)
-		const auto quantile = t_quantile_boost(1.0 - 0.5 * alpha, dof);
+		// Get the critical t-value using templated quantile function
+		const auto quantile = t_quantile(T{ 1 } - T{ 0.5 } * alpha, dof);
 
 		// Calculate margin of error: ME = t × SE(β₁)
 		const auto k = quantile * sb;
 
 		// Construct confidence interval: [β₁ - ME, β₁ + ME]
-		const double lower = fitResult.beta1 - k;
-		const double upper = fitResult.beta1 + k;
+		const T lower = fitResult.beta1 - k;
+		const T upper = fitResult.beta1 + k;
 
 		return { lower, upper };
+	}
+
+	/**
+	 * @brief Double-precision specialization (for backward compatibility)
+	 * @param fitResult Result from fit() with double precision
+	 * @param alpha Significance level
+	 * @return Confidence interval bounds
+	 *
+	 * This specialization is kept for backward compatibility and convenience.
+	 * It's equivalent to calling the template version with T=double.
+	 */
+	[[nodiscard]]
+	inline std::pair<double, double>
+		ci_slope(const FitResult<double>& fitResult, const double alpha)
+	{
+		return ci_slope<double>(fitResult, alpha);
 	}
 
 } // namespace LinearRegression
