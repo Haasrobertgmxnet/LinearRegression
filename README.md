@@ -133,8 +133,16 @@ Container für Regressionsergebnisse.
 #### Funktion: `fit`
 
 ```cpp
-template <class T>
+template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]  // Prevents accidentally discarding the result
 FitResult<T> fit(std::span<const T> x, std::span<const T> y)
+```
+bzw. spezialisiert
+```cpp
+template <Helper::SpanCompatible C>
+[[nodiscard]]
+FitResult<double> fit(const C& x, const C& y)
 ```
 
 Passt ein lineares Regressionsmodell an die Daten an.
@@ -147,9 +155,17 @@ Passt ein lineares Regressionsmodell an die Daten an.
 #### Funktion: `ci_slope`
 
 ```cpp
-std::pair<double, double> ci_slope(const FitResult<double>& fitResult, double alpha)
+template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]
+std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
 ```
-
+bzw. spezialisiert
+```cpp
+[[nodiscard]]
+inline std::pair<double, double>
+ci_slope(const FitResult<double>& fitResult, const double alpha)
+```
 Berechnet das Konfidenzintervall für den Steigungskoeffizienten.
 
 **Parameter:**
@@ -160,7 +176,14 @@ Berechnet das Konfidenzintervall für den Steigungskoeffizienten.
 
 ```cpp
 template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]
 T coeff_of_determination(const FitResult<T>& fitResult)
+```
+bzw. spezialisiert
+```cpp
+[[nodiscard]]
+inline double coeff_of_determination(const FitResult<double>& fitResult)
 ```
 
 Berechnet das Bestimmtheitsmaß (R²).
@@ -357,8 +380,16 @@ Contenedor para resultados de regresión.
 #### Función: `fit`
 
 ```cpp
-template <class T>
+template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]  // Prevents accidentally discarding the result
 FitResult<T> fit(std::span<const T> x, std::span<const T> y)
+```
+o especializado en plantillas C++
+```cpp
+template <Helper::SpanCompatible C>
+[[nodiscard]]
+FitResult<double> fit(const C& x, const C& y)
 ```
 
 Ajusta un modelo de regresión lineal a los datos.
@@ -371,7 +402,16 @@ Ajusta un modelo de regresión lineal a los datos.
 #### Función: `ci_slope`
 
 ```cpp
-std::pair<double, double> ci_slope(const FitResult<double>& fitResult, double alpha)
+template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]
+std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
+```
+o especializado en plantillas C++
+```cpp
+[[nodiscard]]
+inline std::pair<double, double>
+ci_slope(const FitResult<double>& fitResult, const double alpha)
 ```
 
 Calcula el intervalo de confianza para el coeficiente de pendiente.
@@ -384,7 +424,14 @@ Calcula el intervalo de confianza para el coeficiente de pendiente.
 
 ```cpp
 template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]
 T coeff_of_determination(const FitResult<T>& fitResult)
+```
+o especializado en plantillas C++
+```cpp
+[[nodiscard]]
+inline double coeff_of_determination(const FitResult<double>& fitResult)
 ```
 
 Calcula el coeficiente de determinación (R²).
@@ -581,8 +628,16 @@ Container for regression results.
 #### Function: `fit`
 
 ```cpp
-template <class T>
+template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]  // Prevents accidentally discarding the result
 FitResult<T> fit(std::span<const T> x, std::span<const T> y)
+```
+or C++ template specialized
+```cpp
+template <Helper::SpanCompatible C>
+[[nodiscard]]
+FitResult<double> fit(const C& x, const C& y)
 ```
 
 Fits a linear regression model to the data.
@@ -595,7 +650,16 @@ Fits a linear regression model to the data.
 #### Function: `ci_slope`
 
 ```cpp
-std::pair<double, double> ci_slope(const FitResult<double>& fitResult, double alpha)
+template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]
+std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
+```
+or C++ template specialized
+```cpp
+[[nodiscard]]
+inline std::pair<double, double>
+ci_slope(const FitResult<double>& fitResult, const double alpha)
 ```
 
 Calculates confidence interval for the slope coefficient.
@@ -608,7 +672,14 @@ Calculates confidence interval for the slope coefficient.
 
 ```cpp
 template <typename T>
+    requires std::is_floating_point_v<T>
+[[nodiscard]]
 T coeff_of_determination(const FitResult<T>& fitResult)
+```
+or C++ template specialized
+```cpp
+[[nodiscard]]
+inline double coeff_of_determination(const FitResult<double>& fitResult)
 ```
 
 Calculates the coefficient of determination (R²).
