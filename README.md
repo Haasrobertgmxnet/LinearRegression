@@ -11,11 +11,12 @@ Eine moderne, template-basierte Implementierung der einfachen linearen Regressio
 
 ### Features
 - **Modernes C++20**: Nutzt Concepts, `std::span`, `std::transform_reduce` und `[[nodiscard]]`
-- **Template-Basiert**: Generische Implementierung für verschiedene numerische Typen (float, double, long double)
+- **Template-Basiert**: Generische Implementierung für Gleitkommatypen (float, double, long double)
 - **Boost-Integration**: Verwendet Boost.Math für präzise Student-t-Verteilungs-Quantile
+- **Parallele Ausführung**: Nutzt `std::execution::par` für optimierte Performance bei großen Datensätzen
 - **Umfassende Statistik**: Berechnet Regressionskoeffizienten, Korrelation, SSE und Konfidenzintervalle
 - **Speichereffizient**: Arbeitet mit `std::span` zur Vermeidung unnötiger Kopien
-- **Typsicher**: Umfangreicher Einsatz von Concepts und `static_assert` für Compile-Time-Sicherheit
+- **Typsicher**: Umfangreicher Einsatz von `std::floating_point` Concept für Compile-Time-Sicherheit
 - **Header-Only-Kompatibel**: Geeignet für Header-Only-Library-Integration
 
 ### Projektstruktur
@@ -23,13 +24,13 @@ Eine moderne, template-basierte Implementierung der einfachen linearen Regressio
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── linreg.h      # Haupt-Regressionsimplementierung
-│   ├── stats.h                 # Statistische Hilfsfunktionen
-│   ├── span_compatible.h       # Helper-Utilities und Concepts
-│   └── LinearRegression.cpp               # Beispielverwendung (falls vorhanden)
-├── Documentation/              # Zusätzliche Dokumentation
-├── LinearRegression.slnx      # Visual Studio Solution
-└── README.md                  # Diese Datei
+│   ├── linreg.h              # Haupt-Regressionsimplementierung
+│   ├── stats.h               # Statistische Hilfsfunktionen (mit parallel execution)
+│   ├── span_compatible.h     # Helper-Utilities und Concepts
+│   └── LinearRegression.cpp  # Beispielverwendung mit gnuplot-Visualisierung
+├── Documentation/            # Zusätzliche Dokumentation
+├── LinearRegression.slnx    # Visual Studio Solution
+└── README.md                # Diese Datei
 ```
 
 ### Mathematischer Hintergrund
@@ -58,20 +59,21 @@ y = β₀ + β₁x + ε
 ### Installation
 
 #### Voraussetzungen
-- C++20-kompatibler Compiler (GCC 10+, Clang 10+, MSVC 2019+)
+- C++20-kompatibler Compiler (GCC 10+, Clang 10+, MSVC 2019+) mit TBB-Unterstützung
 - Boost-Bibliotheken (speziell Boost.Math)
+- Intel TBB (Threading Building Blocks) für parallele Ausführung
 
 #### Abhängigkeiten
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get install libboost-math-dev
+sudo apt-get install libboost-math-dev libtbb-dev
 
 # macOS mit Homebrew
-brew install boost
+brew install boost tbb
 
 # Windows (vcpkg)
-vcpkg install boost-math
+vcpkg install boost-math tbb
 ```
 
 #### Klonen und Kompilieren
@@ -80,8 +82,11 @@ vcpkg install boost-math
 git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
-# Mit g++
-g++ -std=c++20 -I/pfad/zu/boost -o regression_example LinearRegression.cpp
+# Mit g++ (mit TBB für parallele Ausführung)
+g++ -std=c++20 -I/pfad/zu/boost -o regression_example LinearRegression.cpp -ltbb
+
+# Für Windows mit MSVC
+# Stelle sicher, dass die Projekt-Einstellungen TBB einschließen
 ```
 
 ### Grundlegende Verwendung
@@ -135,10 +140,10 @@ Container für Regressionsergebnisse.
 ```cpp
 template <typename T>
     requires std::is_floating_point_v<T>
-[[nodiscard]]  // Prevents accidentally discarding the result
+[[nodiscard]]
 FitResult<T> fit(std::span<const T> x, std::span<const T> y)
 ```
-bzw. spezialisiert
+bzw. Container-Überladung
 ```cpp
 template <Helper::SpanCompatible C>
 [[nodiscard]]
@@ -152,6 +157,8 @@ Passt ein lineares Regressionsmodell an die Daten an.
 - Mindestens 3 Datenpunkte erforderlich
 - x-Werte dürfen nicht alle identisch sein
 
+**Hinweis:** Verwendet parallele Ausführung (`std::execution::par`) für Mean-Centering und Dot-Product-Berechnungen.
+
 #### Funktion: `ci_slope`
 
 ```cpp
@@ -160,17 +167,18 @@ template <typename T>
 [[nodiscard]]
 std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
 ```
-bzw. spezialisiert
+bzw. double-Spezialisierung
 ```cpp
 [[nodiscard]]
 inline std::pair<double, double>
 ci_slope(const FitResult<double>& fitResult, const double alpha)
 ```
+
 Berechnet das Konfidenzintervall für den Steigungskoeffizienten.
 
 **Parameter:**
 - `fitResult` - Ergebnis der `fit()`-Funktion
-- `alpha` - Signifikanzniveau (z.B. 0.05 für 95% KI)
+- `alpha` - Signifikanzniveau (z.B. 0.05 für 95% KI, 0.01 für 99% KI)
 
 #### Funktion: `coeff_of_determination`
 
@@ -180,7 +188,7 @@ template <typename T>
 [[nodiscard]]
 T coeff_of_determination(const FitResult<T>& fitResult)
 ```
-bzw. spezialisiert
+bzw. double-Spezialisierung
 ```cpp
 [[nodiscard]]
 inline double coeff_of_determination(const FitResult<double>& fitResult)
@@ -202,6 +210,32 @@ auto result = LinearRegression::fit(x, y);
 double r_squared = LinearRegression::coeff_of_determination(result);
 std::cout << "Modell erklärt " << (r_squared * 100) << "% der Varianz\n";
 ```
+
+### Stats-Namespace Funktionen
+
+#### `Stats::mean`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+T mean(std::span<const T> data)
+```
+Berechnet arithmetisches Mittel mit paralleler Ausführung (`std::reduce` mit `std::execution::par`).
+
+#### `Stats::shift`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+std::vector<T> shift(std::span<const T> x)
+```
+Zentriert Daten um Mittelwert (mean-centering) mit paralleler Transformation.
+
+#### `Stats::inner_product`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+T inner_product(std::span<const T> x, std::span<const T> y)
+```
+Berechnet Dot-Product mit paralleler Ausführung (`std::transform_reduce` mit `std::execution::par`).
 
 ### Fortgeschrittene Verwendung
 
@@ -236,6 +270,42 @@ std::span<const double> y_span{y_data};
 auto result = LinearRegression::fit(x_span, y_span);
 ```
 
+#### Visualisierung mit gnuplot
+
+Das mitgelieferte `LinearRegression.cpp` zeigt, wie man Ergebnisse mit gnuplot visualisiert:
+
+```cpp
+#include "linreg.h"
+#include <vector>
+
+int main() {
+    std::vector<double> x = {1,2,3,4,5,6,7,8,9,10};
+    std::vector<double> y = {3.1,5.0,7.2,9.1,10.0,13.2,15.5,16.5,19.0,21.3};
+    
+    auto result = LinearRegression::fit(x, y);
+    auto [lower, upper] = LinearRegression::ci_slope(result, 0.05);
+    
+    // plot_chart() Funktion erstellt gnuplot-Visualisierung mit:
+    // - Datenpunkten
+    // - Regressionsgerade
+    // - Konfidenzintervall-Band
+    plot_chart(x, y);
+    
+    return 0;
+}
+```
+
+### Performance-Hinweise
+
+**Parallele Ausführung:**
+- Die Stats-Funktionen nutzen `std::execution::par` für große Datensätze
+- Bei kleinen Datensätzen (<1000 Punkte) kann der Overhead die Vorteile überwiegen
+- TBB (Threading Building Blocks) muss zur Link-Zeit verfügbar sein
+
+**Rundungsfehler:**
+- Parallele Ausführung kann zu minimalen Unterschieden in Gleitkomma-Rundungen führen
+- Für exakt reproduzierbare Ergebnisse verwende sequentielle Ausführung
+
 ### Lizenz
 
 Dieses Projekt ist Open Source und unter der MIT-Lizenz verfügbar.
@@ -258,11 +328,12 @@ Una implementación moderna basada en templates de regresión lineal simple util
 
 ### Características
 - **C++20 Moderno**: Utiliza concepts, `std::span`, `std::transform_reduce` y `[[nodiscard]]`
-- **Basado en Templates**: Implementación genérica que soporta varios tipos numéricos (float, double, long double)
+- **Basado en Templates**: Implementación genérica para tipos de punto flotante (float, double, long double)
 - **Integración Boost**: Usa Boost.Math para cuantiles precisos de la distribución t de Student
+- **Ejecución Paralela**: Utiliza `std::execution::par` para rendimiento optimizado en conjuntos grandes de datos
 - **Estadísticas Completas**: Calcula coeficientes de regresión, correlación, SSE e intervalos de confianza
 - **Eficiencia de Memoria**: Trabaja con `std::span` para evitar copias innecesarias
-- **Seguridad de Tipos**: Uso extensivo de concepts y `static_assert` para seguridad en tiempo de compilación
+- **Seguridad de Tipos**: Uso extensivo del concept `std::floating_point` para seguridad en tiempo de compilación
 - **Compatible Header-Only**: Adecuado para integración de biblioteca header-only
 
 ### Estructura del Proyecto
@@ -270,13 +341,13 @@ Una implementación moderna basada en templates de regresión lineal simple util
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── linreg.h      # Implementación principal de regresión
-│   ├── stats.h                 # Funciones de utilidad estadística
-│   ├── span_compatible.h       # Utilidades helper y concepts
-│   └── LinearRegression.cpp               # Ejemplo de uso (si está presente)
-├── Documentation/              # Documentación adicional
-├── LinearRegression.slnx      # Solución de Visual Studio
-└── README.md                  # Este archivo
+│   ├── linreg.h              # Implementación principal de regresión
+│   ├── stats.h               # Funciones de utilidad estadística (con ejecución paralela)
+│   ├── span_compatible.h     # Utilidades helper y concepts
+│   └── LinearRegression.cpp  # Ejemplo de uso con visualización gnuplot
+├── Documentation/            # Documentación adicional
+├── LinearRegression.slnx    # Solución de Visual Studio
+└── README.md                # Este archivo
 ```
 
 ### Fundamento Matemático
@@ -305,20 +376,21 @@ y = β₀ + β₁x + ε
 ### Instalación
 
 #### Requisitos Previos
-- Compilador compatible con C++20 (GCC 10+, Clang 10+, MSVC 2019+)
+- Compilador compatible con C++20 (GCC 10+, Clang 10+, MSVC 2019+) con soporte TBB
 - Bibliotecas Boost (específicamente Boost.Math)
+- Intel TBB (Threading Building Blocks) para ejecución paralela
 
 #### Dependencias
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get install libboost-math-dev
+sudo apt-get install libboost-math-dev libtbb-dev
 
 # macOS con Homebrew
-brew install boost
+brew install boost tbb
 
 # Windows (vcpkg)
-vcpkg install boost-math
+vcpkg install boost-math tbb
 ```
 
 #### Clonar y Compilar
@@ -327,8 +399,11 @@ vcpkg install boost-math
 git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
-# Usando g++
-g++ -std=c++20 -I/ruta/a/boost -o regression_example LinearRegression.cpp
+# Usando g++ (con TBB para ejecución paralela)
+g++ -std=c++20 -I/ruta/a/boost -o regression_example LinearRegression.cpp -ltbb
+
+# Para Windows con MSVC
+# Asegúrate de que la configuración del proyecto incluya TBB
 ```
 
 ### Uso Básico
@@ -382,10 +457,10 @@ Contenedor para resultados de regresión.
 ```cpp
 template <typename T>
     requires std::is_floating_point_v<T>
-[[nodiscard]]  // Prevents accidentally discarding the result
+[[nodiscard]]
 FitResult<T> fit(std::span<const T> x, std::span<const T> y)
 ```
-o especializado en plantillas C++
+o sobrecarga de contenedor
 ```cpp
 template <Helper::SpanCompatible C>
 [[nodiscard]]
@@ -399,6 +474,8 @@ Ajusta un modelo de regresión lineal a los datos.
 - Se requieren mínimo 3 puntos de datos
 - Los valores de x no pueden ser todos idénticos
 
+**Nota:** Utiliza ejecución paralela (`std::execution::par`) para mean-centering y cálculos de producto punto.
+
 #### Función: `ci_slope`
 
 ```cpp
@@ -407,7 +484,7 @@ template <typename T>
 [[nodiscard]]
 std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
 ```
-o especializado en plantillas C++
+o especialización double
 ```cpp
 [[nodiscard]]
 inline std::pair<double, double>
@@ -418,7 +495,7 @@ Calcula el intervalo de confianza para el coeficiente de pendiente.
 
 **Parámetros:**
 - `fitResult` - Resultado de la función `fit()`
-- `alpha` - Nivel de significancia (ej., 0.05 para IC 95%)
+- `alpha` - Nivel de significancia (ej., 0.05 para IC 95%, 0.01 para IC 99%)
 
 #### Función: `coeff_of_determination`
 
@@ -428,7 +505,7 @@ template <typename T>
 [[nodiscard]]
 T coeff_of_determination(const FitResult<T>& fitResult)
 ```
-o especializado en plantillas C++
+o especialización double
 ```cpp
 [[nodiscard]]
 inline double coeff_of_determination(const FitResult<double>& fitResult)
@@ -450,6 +527,32 @@ auto result = LinearRegression::fit(x, y);
 double r_squared = LinearRegression::coeff_of_determination(result);
 std::cout << "El modelo explica " << (r_squared * 100) << "% de la varianza\n";
 ```
+
+### Funciones del Namespace Stats
+
+#### `Stats::mean`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+T mean(std::span<const T> data)
+```
+Calcula la media aritmética con ejecución paralela (`std::reduce` con `std::execution::par`).
+
+#### `Stats::shift`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+std::vector<T> shift(std::span<const T> x)
+```
+Centra datos alrededor de la media (mean-centering) con transformación paralela.
+
+#### `Stats::inner_product`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+T inner_product(std::span<const T> x, std::span<const T> y)
+```
+Calcula producto punto con ejecución paralela (`std::transform_reduce` con `std::execution::par`).
 
 ### Uso Avanzado
 
@@ -484,6 +587,42 @@ std::span<const double> y_span{y_data};
 auto result = LinearRegression::fit(x_span, y_span);
 ```
 
+#### Visualización con gnuplot
+
+El archivo `LinearRegression.cpp` incluido muestra cómo visualizar resultados con gnuplot:
+
+```cpp
+#include "linreg.h"
+#include <vector>
+
+int main() {
+    std::vector<double> x = {1,2,3,4,5,6,7,8,9,10};
+    std::vector<double> y = {3.1,5.0,7.2,9.1,10.0,13.2,15.5,16.5,19.0,21.3};
+    
+    auto result = LinearRegression::fit(x, y);
+    auto [lower, upper] = LinearRegression::ci_slope(result, 0.05);
+    
+    // La función plot_chart() crea visualización gnuplot con:
+    // - Puntos de datos
+    // - Línea de regresión
+    // - Banda de intervalo de confianza
+    plot_chart(x, y);
+    
+    return 0;
+}
+```
+
+### Notas de Rendimiento
+
+**Ejecución Paralela:**
+- Las funciones Stats utilizan `std::execution::par` para conjuntos grandes de datos
+- En conjuntos pequeños (<1000 puntos) el overhead puede superar los beneficios
+- TBB (Threading Building Blocks) debe estar disponible en tiempo de enlace
+
+**Errores de Redondeo:**
+- La ejecución paralela puede conducir a diferencias mínimas en redondeo de punto flotante
+- Para resultados exactamente reproducibles, use ejecución secuencial
+
 ### Licencia
 
 Este proyecto es de código abierto y está disponible bajo la Licencia MIT.
@@ -506,11 +645,12 @@ A modern, template-based implementation of simple linear regression using C++20 
 
 ### Features
 - **Modern C++20**: Utilizes concepts, `std::span`, `std::transform_reduce`, and `[[nodiscard]]`
-- **Template-Based**: Generic implementation supporting various numeric types (float, double, long double)
+- **Template-Based**: Generic implementation for floating-point types (float, double, long double)
 - **Boost Integration**: Uses Boost.Math for accurate Student's t-distribution quantiles
+- **Parallel Execution**: Leverages `std::execution::par` for optimized performance on large datasets
 - **Comprehensive Statistics**: Calculates regression coefficients, correlation, SSE, and confidence intervals
 - **Memory Efficient**: Works with `std::span` to avoid unnecessary copies
-- **Type Safe**: Extensive use of concepts and `static_assert` for compile-time safety
+- **Type Safe**: Extensive use of `std::floating_point` concept for compile-time safety
 - **Header-Only Compatible**: Suitable for header-only library integration
 
 ### Project Structure
@@ -518,13 +658,13 @@ A modern, template-based implementation of simple linear regression using C++20 
 ```
 LinearRegression/
 ├── LinearRegression/
-│   ├── linreg.h      # Main regression implementation
-│   ├── stats.h                 # Statistical utility functions
-│   ├── span_compatible.h       # Helper utilities and concepts
-│   └── LinearRegression.cpp               # Example usage (if present)
-├── Documentation/              # Additional documentation
-├── LinearRegression.slnx      # Visual Studio solution
-└── README.md                  # This file
+│   ├── linreg.h              # Main regression implementation
+│   ├── stats.h               # Statistical utility functions (with parallel execution)
+│   ├── span_compatible.h     # Helper utilities and concepts
+│   └── LinearRegression.cpp  # Example usage with gnuplot visualization
+├── Documentation/            # Additional documentation
+├── LinearRegression.slnx    # Visual Studio solution
+└── README.md                # This file
 ```
 
 ### Mathematical Foundation
@@ -553,20 +693,21 @@ y = β₀ + β₁x + ε
 ### Installation
 
 #### Prerequisites
-- C++20 compatible compiler (GCC 10+, Clang 10+, MSVC 2019+)
+- C++20 compatible compiler (GCC 10+, Clang 10+, MSVC 2019+) with TBB support
 - Boost libraries (specifically Boost.Math)
+- Intel TBB (Threading Building Blocks) for parallel execution
 
 #### Dependencies
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get install libboost-math-dev
+sudo apt-get install libboost-math-dev libtbb-dev
 
 # macOS with Homebrew
-brew install boost
+brew install boost tbb
 
 # Windows (vcpkg)
-vcpkg install boost-math
+vcpkg install boost-math tbb
 ```
 
 #### Clone and Build
@@ -575,8 +716,11 @@ vcpkg install boost-math
 git clone https://github.com/Haasrobertgmxnet/LinearRegression.git
 cd LinearRegression
 
-# Using g++
-g++ -std=c++20 -I/path/to/boost -o regression_example LinearRegression.cpp
+# Using g++ (with TBB for parallel execution)
+g++ -std=c++20 -I/path/to/boost -o regression_example LinearRegression.cpp -ltbb
+
+# For Windows with MSVC
+# Ensure project settings include TBB
 ```
 
 ### Basic Usage
@@ -630,10 +774,10 @@ Container for regression results.
 ```cpp
 template <typename T>
     requires std::is_floating_point_v<T>
-[[nodiscard]]  // Prevents accidentally discarding the result
+[[nodiscard]]
 FitResult<T> fit(std::span<const T> x, std::span<const T> y)
 ```
-or C++ template specialized
+or container overload
 ```cpp
 template <Helper::SpanCompatible C>
 [[nodiscard]]
@@ -647,6 +791,8 @@ Fits a linear regression model to the data.
 - Minimum 3 data points required
 - x values must not all be identical
 
+**Note:** Uses parallel execution (`std::execution::par`) for mean-centering and dot-product calculations.
+
 #### Function: `ci_slope`
 
 ```cpp
@@ -655,7 +801,7 @@ template <typename T>
 [[nodiscard]]
 std::pair<T, T> ci_slope(const FitResult<T>& fitResult, const T alpha)
 ```
-or C++ template specialized
+or double specialization
 ```cpp
 [[nodiscard]]
 inline std::pair<double, double>
@@ -666,7 +812,7 @@ Calculates confidence interval for the slope coefficient.
 
 **Parameters:**
 - `fitResult` - Result from `fit()` function
-- `alpha` - Significance level (e.g., 0.05 for 95% CI)
+- `alpha` - Significance level (e.g., 0.05 for 95% CI, 0.01 for 99% CI)
 
 #### Function: `coeff_of_determination`
 
@@ -676,7 +822,7 @@ template <typename T>
 [[nodiscard]]
 T coeff_of_determination(const FitResult<T>& fitResult)
 ```
-or C++ template specialized
+or double specialization
 ```cpp
 [[nodiscard]]
 inline double coeff_of_determination(const FitResult<double>& fitResult)
@@ -698,6 +844,32 @@ auto result = LinearRegression::fit(x, y);
 double r_squared = LinearRegression::coeff_of_determination(result);
 std::cout << "Model explains " << (r_squared * 100) << "% of variance\n";
 ```
+
+### Stats Namespace Functions
+
+#### `Stats::mean`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+T mean(std::span<const T> data)
+```
+Computes arithmetic mean with parallel execution (`std::reduce` with `std::execution::par`).
+
+#### `Stats::shift`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+std::vector<T> shift(std::span<const T> x)
+```
+Centers data around mean (mean-centering) with parallel transformation.
+
+#### `Stats::inner_product`
+```cpp
+template <std::floating_point T>
+[[nodiscard]]
+T inner_product(std::span<const T> x, std::span<const T> y)
+```
+Computes dot product with parallel execution (`std::transform_reduce` with `std::execution::par`).
 
 ### Advanced Usage
 
@@ -731,6 +903,42 @@ std::span<const double> y_span{y_data};
 
 auto result = LinearRegression::fit(x_span, y_span);
 ```
+
+#### Visualization with gnuplot
+
+The included `LinearRegression.cpp` demonstrates how to visualize results with gnuplot:
+
+```cpp
+#include "linreg.h"
+#include <vector>
+
+int main() {
+    std::vector<double> x = {1,2,3,4,5,6,7,8,9,10};
+    std::vector<double> y = {3.1,5.0,7.2,9.1,10.0,13.2,15.5,16.5,19.0,21.3};
+    
+    auto result = LinearRegression::fit(x, y);
+    auto [lower, upper] = LinearRegression::ci_slope(result, 0.05);
+    
+    // plot_chart() function creates gnuplot visualization with:
+    // - Data points
+    // - Regression line
+    // - Confidence interval band
+    plot_chart(x, y);
+    
+    return 0;
+}
+```
+
+### Performance Notes
+
+**Parallel Execution:**
+- Stats functions use `std::execution::par` for large datasets
+- For small datasets (<1000 points), overhead may outweigh benefits
+- TBB (Threading Building Blocks) must be available at link time
+
+**Rounding Errors:**
+- Parallel execution may lead to minimal floating-point rounding differences
+- For exactly reproducible results, use sequential execution
 
 ### License
 
