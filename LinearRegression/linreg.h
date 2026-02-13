@@ -1,8 +1,8 @@
 ﻿/**
- * @file LinearRegression.h
+ * @file linreg.h
  * @brief Modern C++20 implementation of simple linear regression
  * @author Haasrobertgmxnet
- * @date 2025
+ * @date 2026
  *
  * This header provides a template-based linear regression implementation
  * using the least squares method. It leverages modern C++20 features
