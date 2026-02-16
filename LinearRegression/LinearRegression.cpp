@@ -1,17 +1,31 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 #include <cstdio>
 #include <cmath>
+#include <span>
+#include <random>
+#include <iostream>
+#include "linreg.h"
 
 // Öffnet gnuplot per Pipe (Windows + Linux)
-FILE* open_gnuplot()
+std::optional<FILE*> open_gnuplot()
 {
+    // Versucht, gnuplot zu starten
+    // Unter Windows verwenden wir _popen, unter Linux popen
+    // "gnuplot -persistent" sorgt dafür, dass das Fenster offen bleibt
+    FILE* gp{};
 #ifdef _WIN32
-    return _popen("gnuplot -persistent", "w");
+    gp = _popen("gnuplot -persistent", "w");
 #else
-    return popen("gnuplot -persistent", "w");
+    gp = popen("gnuplot -persistent", "w");
 #endif
+    if (gp == nullptr) {
+        fprintf(stderr, "Error: Could not open gnuplot. Make sure it is installed and in your PATH.\n");
+        return std::nullopt;
+    }
+    return gp;
 }
 
 void close_gnuplot(FILE* gp)
@@ -22,13 +36,6 @@ void close_gnuplot(FILE* gp)
     pclose(gp);
 #endif
 }
-
-
-#include <span>
-#include <random>
-#include <iostream>
-
-#include "linreg.h"
 
 int plot_chart(const std::span<double>& x, const std::span<double>& y)
 {
@@ -44,8 +51,9 @@ int plot_chart(const std::span<double>& x, const std::span<double>& y)
     double a = res.beta0;   // Intercept
     double b = res.beta1;   // Steigung
 
-    FILE* gp = open_gnuplot();
-    if (!gp) return 1;
+    auto gpo = open_gnuplot();
+    if (gpo == std::nullopt) return 1;
+	auto gp = gpo.value();
 
     // Terminal: qt ist interaktiv; unterstützt meist Transparenz
     fprintf(gp, "set term qt\n");  // optional, je nach System

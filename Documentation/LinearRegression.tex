@@ -231,6 +231,7 @@ This documentation presents ...
 \newpage
 
 \section{Least Squares of correlated Data}
+\subsection{Statement of the Problem and its Solution}
 Given a data set $ \{ (x_i, y_i ) \in \mathbbm{R}^2,\, i\in \{1,\dots , n \} \} $ we ask for an approximate functional dependency of the form $ y_i \approx f_i = f(x_i ) $ for all $ i\in \{1,\dots , n \} $. This means, $f$ is a mathematical function assigning each element $x$ of an interval $I \subset \mathbbm{R} $ an unique $y \in \mathbbm{R} $. For the rest of this documentation we assume that $f$ is a linear function, i.e. there exist numbers $ \beta_0 $ and $ \beta_1 $ in $ \mathbbm{R} $ such that $ f (x) = \beta_0 + \beta_1 x $. To achieve an optimal $f$ with optimal numbers $ \beta_0 $ and $ \beta_1 $ usually a least-square approach is used:
 \begin{equation} \label{ols}
 \mathrm{min}_{\beta_0, \beta_1 } F(\beta_0, \beta_1 ) \text{ with } F(\beta_0, \beta_1 ) = \frac{1}{2}\sum_{i=1}^n | \beta_0 + \beta_1 x_i - y_i |^2  .
@@ -248,9 +249,15 @@ Now we need the following definitions:
 \varrho_{x,y} & = & \frac{\nu_n \sum_{i=1}^n (x_i - \bar{x} )(y_i - \bar{y} ) }{\sigma_x \sigma_y} , \text{ the correlation coefficient of  }\{x_i \}_{i=1}^n \text{ and } \{y_i \}_{i=1}^n .
 \end{eqnarray}
 Here $ \nu_n $ is either $ 1 / (n-1 ) $ if $ \{ (x_i , y_i ) \}_{i=1}^n $ is a sample, and $ \nu_n = 1 /n $, else.
-With this definitions the solutions $ \hat{\beta}_0 $ and $ \hat{\beta}_1 $ of (\ref{nec_cond}) are $ \hat{\beta}_1 = \sigma_y \varrho_{x,y} / \sigma_x $ and $ \hat{\beta}_0 = \bar{y} - \hat{\beta}_1 
+With this definitions the solutions $ \hat{\beta}_0 $ and $ \hat{\beta}_1 $ of (\ref{nec_cond}) are
+\begin{equation} \label{solution_ols}
+\hat{\beta}_1 = \frac{\sigma_y }{\sigma_x } \varrho_{x,y} \text{ and } \hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{x}.
+\end{equation}
+ $ \hat{\beta}_1 = \sigma_y \varrho_{x,y} / \sigma_x $ and $ \hat{\beta}_0 = \bar{y} - \hat{\beta}_1 
 \bar{x } $.
-We need some more definitions:
+
+\subsection{The Coefficient of Determination}
+A essential question is how good such an OLS model performs. Of course, one wants minimal sum of squares $ \sum_{i=1}^n (f_i - y_i  )^2 $. On the other hand large deviations in $y_i $ may prevent a good explanatory power of the model. The answer will be given by the coefficient of determination. To go into more detail we need some more definitions:
 \begin{eqnarray*}
 SS_{\mathrm{tot}} & = & \sum_{i=1}^n (y_i - \bar{y} )^2, \text{ the total sum of squares },\\
 SS_{\mathrm{reg}} & = & \sum_{i=1}^n (f_i - \bar{y} )^2, \text{ the explained sum of squares },\\
@@ -284,7 +291,7 @@ R^2 = 1 - \frac{SS_{\mathrm{res}} }{SS_{\mathrm{tot}} }  = \frac{SS_{\mathrm{reg
 \end{equation*}
 
 \begin{theorem}
-The equation $ \varrho^2_{x,y}  = R^2 $ is true.
+For the choice (\ref{solution_ols}) in the OLS problem (\ref{ols}) the equation $ \varrho^2_{x,y}  = R^2 $ is true.
 \end{theorem}
 
 \begin{proof}
@@ -296,7 +303,29 @@ There is
 & = & \left( \frac{\sigma_y }{\sigma_x } \varrho_{x,y }\right)^2 \frac{ \sigma^2_x }{\sigma^2_y } = \varrho^2_{x,y }
 \end{eqnarray*}
 \end{proof}
-% \input{TeX/References}
+
+\subsection{Confidence Intervals}
+
+For the statistical estimations it is convenient to give a confidence interval.
+So it is reasonable to calculate a confidence interval for the slope $ \hat{\beta}_1 $. \cite[p. 161]{sachs2021} and \cite[p. 185]{bortz1999} give equivalent formulas for such a confidence interval.
+
+\begin{thebibliography}{9}
+
+\bibitem{bortz1999}
+J. Bortz, 
+\emph{Statistik für Sozialwissenschaftler}
+5th ed., Springer-Verlag Berlin Heidelberg, 1999.
+
+\bibitem{sachs2021}
+M. Sachs, 
+\emph{Wahrscheinlichkeitsrechnung und Statistik}
+6th ed., Verlag Carl Hanser, München, 2021.
+
+% \subsection*{Sources without review}
+\bibitem{code}
+Code samples used in this work: \url{https://github.com/Haasrobertgmxnet/LinearRegression}
+
+\end{thebibliography}
 
 %\newpage
 % \printbibliography
