@@ -130,6 +130,7 @@
     <ClCompile Include="LinearRegression.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gnuplot_wrapper.h" />
     <ClInclude Include="linreg.h" />
     <ClInclude Include="span_compatible.h" />
     <ClInclude Include="stats.h" />

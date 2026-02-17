@@ -1,5 +1,6 @@
 #pragma once
 #include <span>
+#include <string_view>
 
 class GnuplotWrapper {
 public:
@@ -30,7 +31,22 @@ public:
 		fprintf(gp, "%s\n", cmd);
 		fflush(gp);
 	}
-	void plot(const std::span<double>& x, const std::span<double>& y) {};
+
+	void send_command(std::string_view s) {
+		send_command(s.data());
+	}
+
+	void plot(const std::span<double>& x, const std::span<double>& y) {
+		fprintf(gp,
+			"plot "
+			"'-' using 1:2:3 with filledcurves title '95%% CI', "
+			"'-' with lines lw 2 dashtype 0.8 title 'Regression', "
+			"'-' with points pt 7 ps 0.8 title 'Data'\n"
+		);
+		for (size_t i = 0; i < x.size(); ++i)
+			fprintf(gp, "%f %f\n", x[i], y[i]);
+		fprintf(gp, "e\n");
+	};
 
 private:
 	FILE* gp{};
